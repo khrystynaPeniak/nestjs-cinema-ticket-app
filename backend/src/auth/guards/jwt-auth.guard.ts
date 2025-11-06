@@ -7,6 +7,10 @@ import {
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../interfaces/authenticated-user.interface';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
