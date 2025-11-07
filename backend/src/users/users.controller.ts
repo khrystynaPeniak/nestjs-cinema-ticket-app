@@ -12,7 +12,8 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser, Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
-import { JwtAuthGuard, RolesGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
