@@ -12,6 +12,12 @@ enum UserRole {
   ADMIN
 }
 
+enum MovieStatus {
+  COMING_SOON
+  NOW_SHOWING
+  ARCHIVED
+}
+
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
@@ -23,4 +29,21 @@ model User {
   updatedAt DateTime  @updatedAt
 
   @@map("users")
+}
+
+model Movie {
+  id          String       @id @default(uuid())
+  title       String
+  description String       @db.Text
+  duration    Int
+  genre       String
+  posterUrl   String?
+  trailerUrl  String?
+  rating      Float?       @default(0)
+  status      MovieStatus  @default(NOW_SHOWING)
+  releaseDate DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("movies")
 }
