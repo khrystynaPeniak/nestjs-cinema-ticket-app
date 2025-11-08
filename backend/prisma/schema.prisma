@@ -47,3 +47,14 @@ model Movie {
 
   @@map("movies")
 }
+
+model Hall {
+  id            String     @id @default(uuid())
+  name          String     @unique
+  totalSeats    Int
+  configuration Json
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("halls")
+}
