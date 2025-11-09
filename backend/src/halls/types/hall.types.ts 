@@ -1,0 +1,9 @@
+export interface HallRow {
+  number: number;
+  seats: number;
+  type?: 'STANDARD' | 'VIP';
+}
+
+export interface HallConfiguration {
+  rows: HallRow[];
+}

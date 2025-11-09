@@ -6,7 +6,6 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MoviesModule } from './movies/movies.module';
 import { HallsModule } from './halls/halls.module';
-import { SeatsModule } from './seats/seats.module';
 
 @Module({
   imports: [
@@ -18,7 +17,6 @@ import { SeatsModule } from './seats/seats.module';
     UsersModule,
     MoviesModule,
     HallsModule,
-    SeatsModule,
   ],
   providers: [
     {
