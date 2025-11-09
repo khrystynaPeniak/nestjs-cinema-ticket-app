@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { HallsService } from './halls.service';
 import { HallsController } from './halls.controller';
-import { PrismaService } from 'prisma/prisma.service';
-import { SeatFactory } from 'src/halls/factories/seat.factory';
+import { SeatFactory } from './factories/seat.factory';
 import { HallFactory } from './factories/hall.factory';
+import { PrismaModule } from 'prisma/prisma.module';
 
 @Module({
-  providers: [HallsService, PrismaService, SeatFactory, HallFactory],
+  imports: [PrismaModule],
   controllers: [HallsController],
+  providers: [HallsService, SeatFactory, HallFactory],
+  exports: [HallsService],
 })
 export class HallsModule {}

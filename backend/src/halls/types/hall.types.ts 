@@ -1,7 +1,9 @@
+import { SeatType } from '@prisma/client';
+
 export interface HallRow {
   number: number;
   seats: number;
-  type?: 'STANDARD' | 'VIP';
+  type?: SeatType;
 }
 
 export interface HallConfiguration {

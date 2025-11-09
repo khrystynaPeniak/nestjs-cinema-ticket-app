@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateHallDto } from './dto/create-hall.dto';
 import { UpdateHallDto } from './dto/update-hall.dto';
@@ -20,7 +25,7 @@ export class HallsService {
     });
 
     if (existing) {
-      throw new Error('Hall with this name already exists');
+      throw new ConflictException('Hall with this name already exists');
     }
 
     const hallData = this.hallFactory.createHall(dto);
@@ -28,18 +33,27 @@ export class HallsService {
     const prismaData: Prisma.HallCreateInput = {
       name: hallData.name,
       totalSeats: hallData.totalSeats,
-      configuration: JSON.parse(
-        JSON.stringify(hallData.configuration),
-      ) as Prisma.InputJsonValue,
+      configuration: hallData.configuration as unknown as Prisma.InputJsonValue,
     };
 
     return this.prisma.$transaction(async (tx) => {
       const hall = await tx.hall.create({ data: prismaData });
 
-      const seats = this.seatFactory.createSeats(hall.id, dto.configuration);
-      await tx.seat.createMany({ data: seats });
+      const seats = this.seatFactory.createSeatsWithContinuousNumbers(
+        hall.id,
+        hallData.configuration,
+      );
 
-      return hall;
+      if (seats.length > 0) {
+        await tx.seat.createMany({ data: seats });
+      }
+
+      return tx.hall.findUnique({
+        where: { id: hall.id },
+        include: {
+          seats: { orderBy: [{ rowNumber: 'asc' }, { seatNumber: 'asc' }] },
+        },
+      });
     });
   }
 
@@ -48,6 +62,7 @@ export class HallsService {
       include: {
         _count: { select: { seats: true } },
       },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -55,30 +70,40 @@ export class HallsService {
     const hall = await this.prisma.hall.findUnique({
       where: { id },
       include: {
-        seats: { orderBy: [{ rowNumber: 'asc' }, { seatNumber: 'asc' }] },
+        seats: {
+          orderBy: [{ rowNumber: 'asc' }, { seatNumber: 'asc' }],
+        },
       },
     });
 
     if (!hall) {
-      throw new Error('Hall not found');
+      throw new NotFoundException(`Hall with ID "${id}" not found`);
     }
 
     return hall;
   }
 
   async update(id: string, dto: UpdateHallDto) {
-    const existing = await this.findOne(id);
+    await this.findOne(id);
 
-    if (!existing) {
-      throw new Error('Cannot update non-existing hall');
+    if (dto.configuration && dto.totalSeats) {
+      const calculatedSeats = dto.configuration.rows.reduce(
+        (sum, row) => sum + row.seats,
+        0,
+      );
+
+      if (calculatedSeats !== dto.totalSeats) {
+        throw new BadRequestException(
+          `Total seats mismatch: configuration has ${calculatedSeats} seats but totalSeats is ${dto.totalSeats}`,
+        );
+      }
     }
 
     const updateData: Prisma.HallUpdateInput = {
-      ...dto,
+      name: dto.name,
+      totalSeats: dto.totalSeats,
       configuration: dto.configuration
-        ? (JSON.parse(
-            JSON.stringify(dto.configuration),
-          ) as Prisma.InputJsonValue)
+        ? (dto.configuration as unknown as Prisma.InputJsonValue)
         : undefined,
     };
 
@@ -89,11 +114,7 @@ export class HallsService {
   }
 
   async remove(id: string) {
-    const existing = await this.findOne(id);
-
-    if (!existing) {
-      throw new Error('Cannot delete non-existing hall');
-    }
+    await this.findOne(id);
 
     return this.prisma.hall.delete({ where: { id } });
   }

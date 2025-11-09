@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { HallsService } from './halls.service';
 import { CreateHallDto } from './dto/create-hall.dto';
@@ -30,15 +32,18 @@ export class HallsController {
   constructor(private readonly hallsService: HallsService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new hall (admin only)' })
   @ApiBody({ type: CreateHallDto })
   @ApiResponse({ status: 201, description: 'Hall created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
   @ApiResponse({
-    status: 403,
-    description: 'Forbidden. Only admin can create halls',
+    status: 409,
+    description: 'Hall with this name already exists',
   })
   create(@Body() createHallDto: CreateHallDto) {
     return this.hallsService.create(createHallDto);
@@ -53,8 +58,8 @@ export class HallsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get hall by ID (public)' })
-  @ApiParam({ name: 'id', description: 'Hall ID' })
-  @ApiResponse({ status: 200, description: 'Hall details' })
+  @ApiParam({ name: 'id', description: 'Hall UUID' })
+  @ApiResponse({ status: 200, description: 'Hall details with seats' })
   @ApiResponse({ status: 404, description: 'Hall not found' })
   findOne(@Param('id') id: string) {
     return this.hallsService.findOne(id);
@@ -65,29 +70,27 @@ export class HallsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update hall by ID (admin only)' })
+  @ApiParam({ name: 'id', description: 'Hall UUID' })
   @ApiBody({ type: UpdateHallDto })
   @ApiResponse({ status: 200, description: 'Hall updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
   @ApiResponse({ status: 404, description: 'Hall not found' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden. Only admin can update halls',
-  })
   update(@Param('id') id: string, @Body() updateHallDto: UpdateHallDto) {
     return this.hallsService.update(id, updateHallDto);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete hall by ID (admin only)' })
-  @ApiResponse({ status: 200, description: 'Hall deleted successfully' })
+  @ApiParam({ name: 'id', description: 'Hall UUID' })
+  @ApiResponse({ status: 204, description: 'Hall deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
   @ApiResponse({ status: 404, description: 'Hall not found' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden. Only admin can delete halls',
-  })
-  remove(@Param('id') id: string) {
-    return this.hallsService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.hallsService.remove(id);
   }
 }

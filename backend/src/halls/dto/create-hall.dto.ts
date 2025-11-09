@@ -1,13 +1,7 @@
-import {
-  IsString,
-  IsInt,
-  IsObject,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { IsString, IsInt, Min, Max, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import type { HallConfiguration } from '../types/seat.types';
+import { HallConfigurationDto } from './hall-configuration.dto';
 
 export class CreateHallDto {
   @ApiProperty({
@@ -21,34 +15,25 @@ export class CreateHallDto {
     example: 120,
     description: 'Total number of seats in the hall',
     minimum: 1,
+    maximum: 200,
   })
   @IsInt()
   @Min(1)
+  @Max(200)
   totalSeats: number;
 
   @ApiProperty({
-    description: 'Seat configuration for the hall',
+    type: HallConfigurationDto,
+    description: 'Seating configuration for the hall',
     example: {
       rows: [
-        {
-          rowNumber: 1,
-          seats: [
-            { number: 1, type: 'STANDARD' },
-            { number: 2, type: 'VIP' },
-          ],
-        },
-        {
-          rowNumber: 2,
-          seats: [
-            { number: 1, type: 'STANDARD' },
-            { number: 2, type: 'STANDARD' },
-          ],
-        },
+        { number: 1, seats: 10, type: 'STANDARD' },
+        { number: 2, seats: 12, type: 'VIP' },
+        { number: 3, seats: 10, type: 'STANDARD' },
       ],
     },
   })
-  @IsObject()
-  @ValidateNested({ each: true })
-  @Type(() => Object)
-  configuration: HallConfiguration;
+  @ValidateNested()
+  @Type(() => HallConfigurationDto)
+  configuration: HallConfigurationDto;
 }
