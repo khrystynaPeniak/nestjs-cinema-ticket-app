@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateHallDto } from './dto/create-hall.dto';
 import { UpdateHallDto } from './dto/update-hall.dto';
-import { SeatFactory } from 'src/halls/factories/seat.factory';
+import { SeatFactory } from './factories/seat.factory';
 import { HallFactory } from './factories/hall.factory';
 import type { Prisma } from '@prisma/client';
 
@@ -28,7 +28,9 @@ export class HallsService {
     const prismaData: Prisma.HallCreateInput = {
       name: hallData.name,
       totalSeats: hallData.totalSeats,
-      configuration: hallData.configuration as unknown as Prisma.InputJsonValue,
+      configuration: JSON.parse(
+        JSON.stringify(hallData.configuration),
+      ) as Prisma.InputJsonValue,
     };
 
     return this.prisma.$transaction(async (tx) => {
@@ -74,7 +76,9 @@ export class HallsService {
     const updateData: Prisma.HallUpdateInput = {
       ...dto,
       configuration: dto.configuration
-        ? (dto.configuration as unknown as Prisma.InputJsonValue)
+        ? (JSON.parse(
+            JSON.stringify(dto.configuration),
+          ) as Prisma.InputJsonValue)
         : undefined,
     };
 
