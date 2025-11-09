@@ -5,6 +5,7 @@ import { PrismaModule } from 'prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MoviesModule } from './movies/movies.module';
+import { HallsModule } from './halls/halls.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { MoviesModule } from './movies/movies.module';
     AuthModule,
     UsersModule,
     MoviesModule,
+    HallsModule,
   ],
   providers: [
     {

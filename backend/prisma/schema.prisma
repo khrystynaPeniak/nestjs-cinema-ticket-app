@@ -18,6 +18,11 @@ enum MovieStatus {
   ARCHIVED
 }
 
+enum SeatType {
+  STANDARD
+  VIP
+}
+
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
@@ -46,4 +51,29 @@ model Movie {
   updatedAt   DateTime     @updatedAt
 
   @@map("movies")
+}
+
+model Hall {
+  id            String     @id @default(uuid())
+  name          String     @unique
+  totalSeats    Int
+  configuration Json
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  seats         Seat[]
+
+  @@map("halls")
+}
+
+model Seat {
+  id           String        @id @default(uuid())
+  hallId       String
+  rowNumber    Int
+  seatNumber   Int
+  type         SeatType      @default(STANDARD)
+  createdAt    DateTime      @default(now())
+  hall         Hall          @relation(fields: [hallId], references: [id], onDelete: Cascade)
+
+  @@unique([hallId, rowNumber, seatNumber])
+  @@map("seats")
 }
